@@ -74,11 +74,11 @@ const Profil = () => {
             src={data?.imageUrl_travailleur
               ? `http://localhost:8081/${data.imageUrl_travailleur.replace('backend/', '')}`
               : 'default-image-url.jpg'} // Fallback image
-            alt={data? `${data.nom_travailleur} ${data.prenom_travailleur}` : "Nom de travailleur"} // Fallback alt text
+            alt={data? `${data.nom_travailleur}` : "Nom de travailleur"} // Fallback alt text
             className="w-32 h-32 rounded-full object-cover border-4 border-gray-200 dark:border-gray-700"
           />
           <div>
-            <h1 className="text-3xl font-bold text-gray-800 dark:text-white">{data? `${data.nom_travailleur} ${data.prenom_travailleur}` : "Nom de travailleur"}</h1>
+            <h1 className="text-3xl font-bold text-gray-800 dark:text-white">{data? `${data.nom_travailleur}` : "Nom de travailleur"}</h1>
             <p className="text-gray-600 dark:text-gray-400">Code Ménage: {data?.codeMenage || 'N/A'}</p>
             <p className="text-gray-600 dark:text-gray-400">Sexe: {data?.sexe_travailleur || 'N/A'}</p>
             <p className="text-gray-600 dark:text-gray-400">Date de Naissance: {formatDate(data?.age_travailleur || 'N/A')}</p>

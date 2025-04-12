@@ -1,32 +1,29 @@
-CREATE DATABASE IF NOT EXISTS stage;
-USE stage;
+USE sql8748193;
 
 -- Table Travailleur avec les colonnes supplémentaires pour l'inscription
 CREATE TABLE travailleur (
-  id_travailleur CHAR(36) PRIMARY KEY DEFAULT (UUID()), 
+  id_travailleur CHAR(36) PRIMARY KEY, 
   codeMenage INT UNIQUE NOT NULL,
   nom_travailleur VARCHAR(255) NOT NULL,
   prenom_travailleur VARCHAR(255) NOT NULL,
   sexe_travailleur ENUM('HOMME', 'FEMME') NOT NULL,
-  age_travailleur Date,
+  age_travailleur DATE,
   cin_travailleur DOUBLE UNIQUE NOT NULL,
   imageUrl_travailleur VARCHAR(255),
   role ENUM('SIMPLE', 'ADMINISTRATEUR') NOT NULL,
-  email_travailleur VARCHAR(255) UNIQUE NOT NULL,    -- Adresse email unique
-  password_travailleur VARCHAR(255) NOT NULL,        -- Mot de passe haché
-  is_verified BOOLEAN DEFAULT FALSE,                 -- Indique si l'email est vérifié
-  verification_code INT,                             -- Code de validation par email
-  code_expires_at DATETIME,                          -- Expiration du code de validation
-  reset_token VARCHAR(255),                          -- Token pour la réinitialisation du mot de passe
-  reset_token_expires_at DATETIME,                   -- Expiration du token de réinitialisation
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,    -- Date de création du compte
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP -- Date de mise à jour
+  email_travailleur VARCHAR(255) UNIQUE NOT NULL,
+  password_travailleur VARCHAR(255) NOT NULL,
+  is_verified BOOLEAN DEFAULT FALSE,
+  verification_code INT,
+  code_expires_at DATETIME,
+  reset_token VARCHAR(255),
+  reset_token_expires_at DATETIME
 );
 
 
 -- Table Conjoint
-CREATE TABLE Conjoint (
-  id_conjoint CHAR(36) PRIMARY KEY DEFAULT (UUID()), 
+CREATE TABLE conjoint (
+  id_conjoint CHAR(36) PRIMARY KEY, 
   nom_conjoint VARCHAR(255) NOT NULL,
   prenom_conjoint VARCHAR(255) NOT NULL,
   sexe_conjoint ENUM('HOMME', 'FEMME') NOT NULL,
@@ -40,8 +37,8 @@ CREATE TABLE Conjoint (
 );
 
 -- Table Enfants
-CREATE TABLE Enfants (
-  id_enfant CHAR(36) PRIMARY KEY DEFAULT (UUID()), 
+CREATE TABLE enfants (
+  id_enfant CHAR(36) PRIMARY KEY, 
   nom_enfant VARCHAR(255) NOT NULL,
   prenom_enfant VARCHAR(255) NOT NULL,
   sexe_enfant ENUM('HOMME', 'FEMME') NOT NULL,
@@ -55,8 +52,8 @@ CREATE TABLE Enfants (
 );
 
 -- Table Remplacant corrigée
-CREATE TABLE Remplacant (
-  id_remplacant CHAR(36) PRIMARY KEY DEFAULT (UUID()), 
+CREATE TABLE remplacant (
+  id_remplacant CHAR(36) PRIMARY KEY, 
   id_travailleur CHAR(36), 
   conjointId CHAR(36), 
   enfantId CHAR(36), 
@@ -72,7 +69,7 @@ CREATE TABLE Remplacant (
   ON DELETE CASCADE
 );
 
-CREATE TABLE EXCEL (
+CREATE TABLE excel (
     id INT(10) AUTO_INCREMENT NOT NULL,
     num_ménage VARCHAR(50) NOT NULL,
     nom_chef_ménage VARCHAR(100) NOT NULL,

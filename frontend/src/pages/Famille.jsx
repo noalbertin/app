@@ -6,6 +6,8 @@ import Swal from 'sweetalert2';
 import BackToTop from "../components/BackToTop";
 import { IoPersonAddSharp } from "react-icons/io5";
 import FamilleSkeleton from "../skeleton/FamilleSkeleton";
+import { FaCamera } from "react-icons/fa";
+
 
 const Famille = () => {
   const location = useLocation();
@@ -141,7 +143,7 @@ const Famille = () => {
   useEffect(() => {
     setTimeout(async () => {
       fetchFamille(); 
-    }, 1000);// Appel initial pour charger les données
+    }, 500);// Appel initial pour charger les données
   }, [id_travailleur]);
 
   if (loading) return <FamilleSkeleton/>;
@@ -219,6 +221,21 @@ const Famille = () => {
     }
   };
 
+  const TravailleurList = ({ travailleur }) => {
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [selectedTravailleur, setSelectedTravailleur] = useState(null);
+  
+    const handleModifierClick = (travailleur) => {
+      setSelectedTravailleur(travailleur);
+      setIsModalOpen(true);
+    };
+  
+    const closeModal = () => {
+      setIsModalOpen(false);
+      setSelectedTravailleur(null);
+    };
+  }
+
 
   return (
     <>
@@ -242,76 +259,78 @@ const Famille = () => {
           </div>
 
           {/* Section des parents */}
-          <div className="flex flex-wrap justify-center gap-6">
-            {/* Afficher le travailleur */}
-            {travailleur && (
-              <div className="max-w-sm bg-slate-50 rounded-lg shadow-lg overflow-hidden cursor-pointer hover:shadow-2xl transition-shadow duration-300 dark:bg-slate-800">
-                <img
-                  className="w-full h-48 object-cover"
-                  src={`http://localhost:8081/${travailleur.imageUrl.replace('backend/', '')}`}
-                  alt="Travailleur"
-                />
-                <div className="p-5">
-                  <h5 className="text-lg font-bold dark:text-slate-200">{travailleur.nom} {travailleur.prenom}</h5>
-                  <p className="text-sm text-gray-700 dark:text-slate-300">{travailleur.sexe === 'FEMME' ? 'Travailleur, née le ': 'Travailleur, né le '}  {formatDate(travailleur.age)} </p>
-                  <p className="text-sm text-gray-700 dark:text-slate-300">Âge:  {calculateAge(travailleur.age)} ans </p>
-                  <p className="text-sm text-gray-700 dark:text-slate-300">Sexe: {travailleur.sexe}</p>
-                  <p className="text-sm text-gray-700 dark:text-slate-300">CIN: {travailleur.cin}</p>
-                  <p className="text-sm text-gray-700 dark:text-slate-300">Rôle: {travailleur.role}</p>
-                </div>
-                
-              </div>
-            )}
+<div className="flex flex-wrap justify-center gap-6 p-6">
+  {/* Afficher le travailleur */}
+  {travailleur && (
+    <div className="max-w-sm bg-slate-50 rounded-lg shadow-lg overflow-hidden cursor-pointer hover:shadow-2xl transition-shadow duration-300 dark:bg-slate-800 transform transition-all duration-300 hover:scale-105">
+      <img
+        className="w-full h-48 object-cover"
+        src={`http://localhost:8081/${travailleur.imageUrl.replace('backend/', '')}`}
+        alt="Travailleur"
+      />
+      <div className="p-5">
+        <h5 className="text-lg font-bold dark:text-slate-200">{travailleur.nom} {travailleur.prenom}</h5>
+        <p className="text-sm text-gray-700 dark:text-slate-300">{travailleur.sexe === 'FEMME' ? 'Travailleur, née le ' : 'Travailleur, né le '} {formatDate(travailleur.age)}</p>
+        <p className="text-sm text-gray-700 dark:text-slate-300">Âge: {calculateAge(travailleur.age)} ans</p>
+        <p className="text-sm text-gray-700 dark:text-slate-300">Sexe: {travailleur.sexe}</p>
+        <p className="text-sm text-gray-700 dark:text-slate-300">CIN: {travailleur.cin}</p>
+        <p className="text-sm text-gray-700 dark:text-slate-300">Rôle: {travailleur.role}</p>
 
-            {/* Afficher le conjoint */}
-            {conjoint && (
-              <div className="max-w-sm bg-slate-50 rounded-lg shadow-lg overflow-hidden cursor-pointer hover:shadow-2xl transition-shadow duration-300 dark:bg-slate-800">
-                <img
-                  className="w-full h-48 object-cover"
-                  src={`http://localhost:8081/${conjoint.imageUrl.replace('backend/', '')}`}
-                  alt="Conjoint"
-                />
-                <div className="p-5">
-                  <h5 className="text-lg font-bold dark:text-slate-200">{conjoint.nom} {conjoint.prenom}</h5>
-                  <p className="text-sm text-gray-700 dark:text-slate-300">{conjoint.sexe === 'FEMME' ? 'Conjoint, née le ': 'Conjoint, né le '} {formatDate(conjoint.age)}</p>
-                  <p className="text-sm text-gray-700 dark:text-slate-300">Âge: {calculateAge(conjoint.age)} ans</p>
-                  <p className="text-sm text-gray-700 dark:text-slate-300">Sexe: {conjoint.sexe}</p>
-                  <p className="text-sm text-gray-700 dark:text-slate-300">CIN: {conjoint.cin}</p>
+      </div>
+      
+                                                         
+                                      
+    </div>
+  )}
 
-                </div>
-              </div>
-            )}
+  {/* Afficher le conjoint */}
+  {conjoint && (
+    <div className="max-w-sm bg-slate-50 rounded-lg shadow-lg overflow-hidden cursor-pointer hover:shadow-2xl transition-shadow duration-300 dark:bg-slate-800 transform transition-all duration-300 hover:scale-105">
+      <img
+        className="w-full h-48 object-cover"
+        src={`http://localhost:8081/${conjoint.imageUrl.replace('backend/', '')}`}
+        alt="Conjoint"
+      />
+      <div className="p-5">
+        <h5 className="text-lg font-bold dark:text-slate-200">{conjoint.nom} {conjoint.prenom}</h5>
+        <p className="text-sm text-gray-700 dark:text-slate-300">{conjoint.sexe === 'FEMME' ? 'Conjoint, née le ' : 'Conjoint, né le '} {formatDate(conjoint.age)}</p>
+        <p className="text-sm text-gray-700 dark:text-slate-300">Âge: {calculateAge(conjoint.age)} ans</p>
+        <p className="text-sm text-gray-700 dark:text-slate-300">Sexe: {conjoint.sexe}</p>
+        <p className="text-sm text-gray-700 dark:text-slate-300">CIN: {conjoint.cin}</p>
+      </div>
+    </div>
+  )}
 
-            {/* Afficher les enfants */}
-            {enfants &&
-        enfants.map((enfant) => (
-          <div
-            className="max-w-sm bg-slate-50 rounded-lg shadow-lg overflow-hidden cursor-pointer hover:shadow-2xl transition-shadow duration-300 dark:bg-slate-800"
-            key={enfant.id}
-          >
-            <img
-              className="w-full h-48 object-cover"
-              src={`http://localhost:8081/${enfant.imageUrl.replace('backend/', '')}`}
-              alt="Enfant"
-            />
-            <div className="p-5">
-              <h5 className="text-lg font-bold dark:text-slate-200">{enfant.nom} {enfant.prenom}</h5>
-              <p className="text-sm text-gray-700 dark:text-slate-300">{enfant.sexe === 'FEMME' ? 'Enfant, née le ': 'Enfant, né le '} {formatDate(enfant.age)}</p>
-              <p className="text-sm text-gray-700 dark:text-slate-300">Âge: {calculateAge(enfant.age)} ans</p>
-              <p className="text-sm text-gray-700 dark:text-slate-300">Sexe: {enfant.sexe}</p>
-              <p className="text-sm text-gray-700 dark:text-slate-300">
-                CIN:
-                {enfant.cin === '0'
-                  ? enfant.sexe === 'FEMME' ? ' Encore mineure' : ' Encore mineur'
-                  : ` ${enfant.cin}`}
-              </p>
-            </div>
-          </div>
-        ))}
-
-          </div>
+  {/* Afficher les enfants */}
+  {enfants &&
+    enfants.map((enfant) => (
+      <div
+        className="max-w-sm bg-slate-50 rounded-lg shadow-lg overflow-hidden cursor-pointer hover:shadow-2xl transition-shadow duration-300 dark:bg-slate-800 transform transition-all duration-300 hover:scale-105"
+        key={enfant.id}
+      >
+        <img
+          className="w-full h-48 object-cover"
+          src={`http://localhost:8081/${enfant.imageUrl.replace('backend/', '')}`}
+          alt="Enfant"
+        />
+        <div className="p-5">
+          <h5 className="text-lg font-bold dark:text-slate-200">{enfant.nom} {enfant.prenom}</h5>
+          <p className="text-sm text-gray-700 dark:text-slate-300">{enfant.sexe === 'FEMME' ? 'Enfant, née le ' : 'Enfant, né le '} {formatDate(enfant.age)}</p>
+          <p className="text-sm text-gray-700 dark:text-slate-300">Âge: {calculateAge(enfant.age)} ans</p>
+          <p className="text-sm text-gray-700 dark:text-slate-300">Sexe: {enfant.sexe}</p>
+          <p className="text-sm text-gray-700 dark:text-slate-300">
+            CIN:
+            {enfant.cin === '0'
+              ? enfant.sexe === 'FEMME' ? ' Encore mineure' : ' Encore mineur'
+              : ` ${enfant.cin}`}
+          </p>
         </div>
       </div>
+    ))}
+</div>
+        </div>
+      </div>
+
        {/* Modal */}
 
        {isModalOpen && (
@@ -329,6 +348,36 @@ const Famille = () => {
 
               {/* Formulaire */}
               <form onSubmit={handleSubmitEnfant}>
+                <div className="flex flex-col items-center pt-3">
+                  {/* Circular button for image upload */}
+                    <label 
+                        htmlFor="file-input" 
+                        className="w-32 h-32 rounded-full border-2 border-gray-300 flex items-center justify-center hover:bg-gray-100 cursor-pointer"
+                      >
+                    {formData.image_enfant ? (
+                      // Display uploaded image
+                      <img 
+                        src={URL.createObjectURL(formData.image_enfant)}
+                        alt="Uploaded" 
+                        className="rounded-full w-full h-full object-cover"
+                      />
+                    ) : (
+                      // Display placeholder text or icon
+                      <FaCamera className="text-gray-500 text-5xl" />
+                    )}
+                  </label>
+
+                  {/* Hidden file input */}
+                  <input 
+                    type="file" 
+                    accept="image/*"
+                    name="image_enfant" 
+                    onChange={handleChange} 
+                    className="hidden" 
+                    id="file-input" 
+                    required 
+                  />
+                </div>
                 <div className="p-4">
                   <div className="grid gap-4 mb-4 grid-cols-2">
                     <div>
@@ -374,7 +423,7 @@ const Famille = () => {
                           name="cin_enfant"
                           onChange={handleChange}
                           required={ageEnfant >= 18}
-                          className={`bg-gray-50 border ${cinError ? 'border-red-500' : 'border-gray-300'} text-gray-900 text-md rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5`}
+                          className={`bg-gray-50 border ${cinError ? 'border-red-500' : 'border-gray-300'} text-gray-900 text-md rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:text-white`}
                         />
                         {cinError && <p className="text-red-500 text-sm mt-1">{cinError}</p>}
                       </div>
@@ -395,7 +444,7 @@ const Famille = () => {
                     </div>
                   </div>
 
-                  <div className="step-2">
+                  {/* <div className="step-2">
                     <label className="border-2 border-dashed p-4 flex justify-center items-center cursor-pointer">
                       {formData.image_enfant ? (
                         <img
@@ -415,7 +464,8 @@ const Famille = () => {
                         required
                       />
                     </label>
-                  </div>
+                  </div> */}
+                  
                 </div>
 
                 {/* Footer du modal */}

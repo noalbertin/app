@@ -4,6 +4,7 @@ import { useState } from 'react';
 import axios from 'axios';
 import Swal from 'sweetalert2';
 import { useNavigate } from 'react-router-dom';
+import { FaCamera } from "react-icons/fa";
 
 const Conjoint = () => {
   const [formData, setFormData] = useState({
@@ -139,6 +140,37 @@ const Conjoint = () => {
             </div>
           </div>
           <form onSubmit={handleSubmitConjoint}>
+            <div className="flex flex-col items-center">
+              {/* Circular button for image upload */}
+                <label 
+                    htmlFor="file-input" 
+                    className="w-32 h-32 rounded-full border-2 border-gray-300 flex items-center justify-center hover:bg-gray-100 cursor-pointer"
+                  >
+                {image ? (
+                  // Display uploaded image
+                  <img 
+                    src={image} 
+                    alt="Uploaded" 
+                    className="rounded-full w-full h-full object-cover"
+                  />
+                ) : (
+                  // Display placeholder text or icon
+                  <FaCamera className="text-gray-500 text-5xl" />
+                )}
+              </label>
+
+              {/* Hidden file input */}
+              <input 
+                type="file" 
+                accept="image/*" 
+                onChange={handleChange} 
+                className="hidden" 
+                id="file-input" 
+                required 
+                name="image_conjoint"
+              />
+            </div>
+
             <div className="row">
               <div className="col-md-6 col-sm-12">
                 <div className="form-group">
@@ -218,7 +250,7 @@ const Conjoint = () => {
               </div>
             </div>
 
-            <div className="step-2">
+            {/* <div className="step-2">
               <label 
                 className="border-2 border-dashed border-gray-400 rounded-lg p-4 flex justify-center items-center cursor-pointer"
                 onDrop={handleDrop}
@@ -231,7 +263,7 @@ const Conjoint = () => {
                   <p className="text-gray-500">Cliquez pour télécharger</p>
                 )}
               </label>
-              {/* Hidden input field */}
+ 
               <input 
                 type="file" 
                 accept="image/*" 
@@ -241,7 +273,7 @@ const Conjoint = () => {
                 required 
                 name='image_conjoint'
               />
-            </div>
+            </div> */}
 
             <div className='flex justify-end'>
               <Button type='submit'>Envoyer</Button>

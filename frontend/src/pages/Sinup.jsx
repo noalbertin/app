@@ -6,6 +6,7 @@ import { RiMailSendFill } from "react-icons/ri";
 import { FaEye, FaEyeSlash, FaUserTie } from "react-icons/fa";
 import { TbNumber } from "react-icons/tb";
 import Swal from 'sweetalert2';
+import { FaCamera } from "react-icons/fa";
 
 const Sinup = () => {
   const [step, setStep] = useState(0);
@@ -40,7 +41,7 @@ const Sinup = () => {
   };
   
   const validateStep1 = async () => {
-    if (!nom_travailleur || !email || !codeMenage) {
+    if (!email || !codeMenage) {
       return false;
     }
   
@@ -97,6 +98,7 @@ const Sinup = () => {
       return false;
     }
   };
+
   const validateCinAndAge = async () => {
     try {
       const response = await fetch('http://localhost:8081/travailleur/validate2', {
@@ -139,7 +141,6 @@ const Sinup = () => {
   
 
   const [nom_travailleur, setNom_travailleur] = useState('');
-  const [prenom_travailleur, setPrenom_travailleur] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [codeMenage, setCodeMenage] = useState('');
@@ -151,69 +152,75 @@ const Sinup = () => {
   const [age_travailleur, setAge_travailleur] = useState('');
   const [image, setImage] = useState(null);
   const navigate = useNavigate();
+  const [errorCodeMenage, setErrorCodeMenage] = useState("");
+const [errorEmail, setErrorEmail] = useState("");
 
-  const handleSignup = async (e) => {
-     e.preventDefault();
-     
 
-    if (step === steps.length - 1 && validateCurrentStep()) {
-       // Check if image exists
-     if (!imageUrl_travailleur) {
+const handleSignup = async (e) => {
+  e.preventDefault();
+
+  if (step === steps.length - 1 && validateCurrentStep()) {
+    // Vérifiez si une image a été ajoutée
+    if (!imageUrl_travailleur) {
       Swal.fire({
         title: 'Erreur!',
         text: 'Veuillez ajouter une image.',
         icon: 'error',
-        confirmButtonText: 'OK'
+        confirmButtonText: 'OK',
       });
       return;
-      
     }
-      
-      try {
-        
-        const formData = new FormData();
-        formData.append('nom_travailleur', nom_travailleur);
-        formData.append('prenom_travailleur', prenom_travailleur);
-        formData.append('email', email);
-        formData.append('codeMenage', codeMenage);
-        formData.append('selectedRole', selectedRole);
-        formData.append('password', password);
-        formData.append('imageUrl_travailleur', imageUrl_travailleur);  // Ajouter l'image
-        formData.append('cin_travailleur', cin_travailleur);
-        formData.append('age_travailleur', age_travailleur);
-        // Envoyer les données au backend via Axios ou autre méthode
-        axios.post('http://localhost:8081/travailleur/addTravailleur/', formData, {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
-        })
-  
-        // Utilisation de SweetAlert2 pour afficher l'alerte
-        Swal.fire({
-            title: 'Inscription réussie!',
-            text: 'Veuillez vérifier votre e-mail pour le code de validation.',
-            icon: 'success',
-            confirmButtonText: 'OK'
-        }).then(() => {
-            // Redirection vers la page de vérification après confirmation
-            navigate('/verify', { state: { email } });
-        });
-        
+
+    try {
+      // Récupérer le nom_travailleur à partir du codeMenage
+      const nom_travailleur = await fetchNomTravailleur();
+      if (!nom_travailleur) {
+        return; // Arrêtez si le nom_travailleur n'a pas pu être récupéré
+      }
+
+      // Préparer les données pour l'inscription
+      const formData = new FormData();
+      formData.append('nom_travailleur', nom_travailleur);
+      formData.append('email', email);
+      formData.append('codeMenage', codeMenage);
+      formData.append('selectedRole', selectedRole);
+      formData.append('password', password);
+      formData.append('imageUrl_travailleur', imageUrl_travailleur); // Ajouter l'image
+      formData.append('cin_travailleur', cin_travailleur);
+      formData.append('age_travailleur', age_travailleur);
+
+      // Envoyer les données au backend
+      await axios.post('http://localhost:8081/travailleur/addTravailleur/', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      // Afficher une alerte de succès
+      Swal.fire({
+        title: 'Inscription réussie!',
+        text: 'Veuillez vérifier votre e-mail pour le code de validation.',
+        icon: 'success',
+        confirmButtonText: 'OK',
+      }).then(() => {
+        // Redirection vers la page de vérification
+        navigate('/verify', { state: { email } });
+      });
     } catch (error) {
-        // Gestion des erreurs avec SweetAlert2
-        Swal.fire({
-            title: 'Erreur!',
-            text: error.response?.data?.message || 'Erreur lors de l\'inscription',
-            icon: 'error',
-            confirmButtonText: 'OK'
-        });
+      // Gestion des erreurs
+      Swal.fire({
+        title: 'Erreur!',
+        text: error.response?.data?.message || 'Erreur lors de l\'inscription',
+        icon: 'error',
+        confirmButtonText: 'OK',
+      });
     }
-    } else {
-      // Sinon, aller à l'étape suivante
-      nextStep();
-    }
-    
-  };
+  } else {
+    // Sinon, passer à l'étape suivante
+    nextStep();
+  }
+};
+
 
   // Fonction pour calculer la force du mot de passe
   const calculatePasswordStrength = (password) => {
@@ -275,9 +282,23 @@ const handleSelect = (role) => {
     setSelectedRole(role);
 };
 
-
-
-
+const fetchNomTravailleur = async () => {
+  try {
+    const response = await axios.get('http://localhost:8081/controller/nomTravailleur', {
+      params: { codeMenage }, // Passez le codeMenage comme paramètre
+    });
+    return response.data.nom_travailleur; // Retourne le nom_travailleur
+  } catch (error) {
+    console.error('Erreur lors de la récupération du nom du travailleur:', error);
+    Swal.fire({
+      title: 'Erreur!',
+      text: 'Impossible de récupérer le nom du travailleur pour ce code ménage.',
+      icon: 'error',
+      confirmButtonText: 'OK',
+    });
+    return null; // Retourne null en cas d'erreur
+  }
+};
 
   return (
     <>
@@ -312,60 +333,12 @@ const handleSelect = (role) => {
                   {errorMessage}
                 </div>
                 )}
-        
-
 
                 <form onSubmit={handleSignup}>
                   <h2 className="text-xl font-bold mb-4 flex justify-center ">{steps[step]}</h2>
 
                   {step === 0 && (
                     <div className="step-1">
-                      <div className="">
-                        <label htmlFor="Nom" className="block mb-2 text-md font-medium text-gray-900 dark:text-white">
-                          Votre Nom <span className="text-red-500">*</span>
-                        </label>
-                        <div className="relative">
-                          <FaUserTie className="absolute right-3 top-3 text-gray-500 cursor-pointer" />
-                          <input 
-                            type="text"
-                            value={nom_travailleur}
-                            onChange={(e) => setNom_travailleur(e.target.value)}
-                            required
-                            className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 pr-10 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
-                          />
-                        </div>
-                      </div>
-                      <div className="pt-3">
-                        <label htmlFor="Nom" className="block mb-2 text-md font-medium text-gray-900 dark:text-white">
-                          Votre Prénom <span className="text-red-500">*</span>
-                        </label>
-                        <div className="relative ">
-                          <FaUserTie className="absolute right-3 top-3 text-gray-500 cursor-pointer" />
-                          <input 
-                            type="text"
-                            value={prenom_travailleur}
-                            onChange={(e) => setPrenom_travailleur(e.target.value)}
-                            required
-                            className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 pr-10 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
-                          />
-                        </div>
-                      </div>
-
-                      <div className="pt-3">
-                        <label htmlFor="Email" className="block text-md font-medium text-gray-900 dark:text-white">
-                          Votre Email <span className="text-red-500">*</span>
-                        </label>
-                        <div className="relative">
-                          <RiMailSendFill className="absolute right-3 top-3 text-gray-500 cursor-pointer" />
-                          <input 
-                            type="email"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            required
-                            className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 pr-10 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
-                          />
-                        </div>
-                      </div>
 
                       <div className="pt-3">
                         <div className="">
@@ -378,6 +351,21 @@ const handleSelect = (role) => {
                             type="number"
                             value={codeMenage}
                             onChange={(e) => setCodeMenage(e.target.value)}
+                            required
+                            className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 pr-10 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+                          />
+                        </div>
+                      </div>
+                      <div className="pt-3">
+                        <label htmlFor="Email" className="block text-md font-medium text-gray-900 dark:text-white">
+                          Votre Email <span className="text-red-500">*</span>
+                        </label>
+                        <div className="relative">
+                          <RiMailSendFill className="absolute right-3 top-3 text-gray-500 cursor-pointer" />
+                          <input 
+                            type="email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
                             required
                             className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 pr-10 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
                           />
@@ -486,35 +474,39 @@ const handleSelect = (role) => {
                     
                   )}
 
-                  {step === 2 && (
-                  <>
-                    <div className="step-2">
-                      <label 
-                        className="border-2 border-dashed border-gray-400 rounded-lg p-4 flex justify-center items-center cursor-pointer"
-                        onDrop={handleDrop}
-                        onDragOver={(event) => event.preventDefault()}
-                        htmlFor="file-input"
-                      >
-                        {image ? (
-                          <img src={image} alt="Uploaded" className="max-w-full max-h-60 " />
-                        ) : (
-                          <p className="text-gray-500">Cliquez pour télécharger</p>
-                        )}
-                      </label>
-                      {/* Hidden input field */}
-                      <input 
-                        type="file" 
-                        accept="image/*" 
-                        onChange={handleChange} 
-                        className="hidden" 
-                        id="file-input" 
-                        required 
-                        name="imageUrl_travailleur"
-                      />
-                    </div>
+{step === 2 && (
+  <>
+    <div className="flex flex-col items-center">
+      {/* Circular button with camera icon */}
+      <label 
+        htmlFor="file-input" 
+        className="w-32 h-32 rounded-full border-2 border-gray-300 flex items-center justify-center hover:bg-gray-100 cursor-pointer"
+      >
+        {image ? (
+          <img 
+            src={image} 
+            alt="Uploaded" 
+            className="rounded-full w-full h-full object-cover"
+          />
+        ) : (
+          <FaCamera className="text-gray-500 text-5xl" />
+        )}
+      </label>
 
-                  </>
-                  )}
+      {/* Hidden input field */}
+      <input 
+        type="file" 
+        accept="image/*" 
+        onChange={handleChange} 
+        className="hidden" 
+        id="file-input" 
+        required 
+        name="imageUrl_travailleur"
+      />
+    </div>
+  </>
+)}
+
 
                   <div className="flex justify-between mt-4">
                     {step === 2 ? (

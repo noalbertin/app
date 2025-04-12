@@ -18,8 +18,7 @@ import Sinup from "./pages/Sinup.jsx";
 import Users from "./pages/Users.jsx";
 import ForgetPassword from "./pages/ForgetPassword.jsx";
 import ThemeContextProvider from "./context/ThemeContext.jsx";
-import ProtectedRoute from './components/ProtectedRoute.jsx'; // Importer le composant
-
+import ProtectedRoute from './components/ProtectedRoute.jsx'; 
 import MainLayout from './layouts/MainLayout'; // Layout principal
 import SimpleLayout from './layouts/SimpleLayout'; // Layout simple pour Login
 import Verify from './pages/VerifyEmail.jsx';
@@ -36,8 +35,8 @@ const router = createBrowserRouter(
     <>
       {/* Routes publiques */}
       <Route element={<SimpleLayout />} path="/">
-        <Route path="/" element={<Login />} /> {/* Login sans protection */}
-        <Route path="/sinup" element={<Sinup />} /> {/* Inscription sans protection */}
+        <Route path="/" element={<Login />} /> 
+        <Route path="/sinup" element={<Sinup />} /> 
         <Route path="/mot_de_passe_oublie" element={<ForgetPassword />} />
         <Route path="/verify" element={<Verify />} />
         <Route path="/reset-password/:token" element={<ResetPassword />} />
@@ -90,7 +89,7 @@ const router = createBrowserRouter(
           }
         />
         <Route
-          path="/excel"
+          path="/beneficiaire"
           element={
             <ProtectedRoute>
               <Excel />

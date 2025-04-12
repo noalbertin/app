@@ -112,14 +112,14 @@ const Navbar = () => {
             <div className="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-slate-50 dark:bg-slate-800 ring-1 ring-black ring-opacity-5 z-100 ">
               <div className="py-1 dark:bg-slate:800" role="menu" aria-orientation="vertical" aria-labelledby="options-menu">
                 <div className="block px-4 py-2 text-lg text-gray-700 dark:text-slate-300" role="menuitem">
-                  {travailleur ? `${travailleur.nom_travailleur} ${travailleur.prenom_travailleur}` : "Nom de travailleur"} {/* Remplacez par le champ approprié */}
+                  {travailleur ? `${travailleur.nom_travailleur}` : "Nom de travailleur"} {/* Remplacez par le champ approprié */}
                 </div>
 
                 <nav>
                   <Link to={`/profile/${id_travailleur}`} className="block px-4 py-2 text-md text-gray-700  dark:text-slate-300" role="menuitem">
                     <span className="flex items-center dark:hover:text-blue-500">
                       <FaUserTie className="mr-2 text-md " /> {/* Icône de déconnexion avec une marge à droite */}
-                      <p> Profile</p>
+                      <p>Mon Profil</p>
                     </span>
                   </Link>
                   <a href='#' onClick={handleLogout} className="block px-4 py-2 text-md text-gray-700  dark:text-slate-300" role="menuitem">

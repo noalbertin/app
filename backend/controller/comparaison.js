@@ -20,8 +20,6 @@ router.get('/nom_comparaison', async (req, res) => {
             FROM (
                 SELECT nom_travailleur AS nom, id_travailleur AS id FROM travailleur
                 UNION ALL
-                SELECT prenom_travailleur AS nom, id_travailleur AS id FROM travailleur
-                UNION ALL
                 SELECT nom_conjoint AS nom, id_conjoint AS id FROM Conjoint
                 UNION ALL
                 SELECT prenom_conjoint AS nom, id_conjoint AS id FROM Conjoint
@@ -53,7 +51,6 @@ router.get('/nom_comparaison', async (req, res) => {
             [travailleurs] = await db.query(`
                 SELECT id_travailleur AS id,
                   nom_travailleur AS nom,
-                  prenom_travailleur AS prenom,
                   cin_travailleur AS cin,
                   age_travailleur AS age,
                   sexe_travailleur AS sexe,
@@ -176,6 +173,43 @@ router.post('/get_details_by_ids', async (req, res) => {
       res.status(500).send('Erreur du serveur');
     }
 });
+
+// Route pour récupérer l'id_travailleur associé à un ID (enfant ou conjoint)
+router.get('/get-travailleur/:id', async (req, res) => {
+  const { id } = req.params; // ID cliqué (enfant ou conjoint)
+
+  try {
+    // Requête SQL pour récupérer l'id_travailleur
+    const query = `
+      SELECT id_travailleur
+      FROM (
+        SELECT id_travailleur
+        FROM enfants
+        WHERE id_enfant = ?
+        UNION ALL
+        SELECT id_travailleur
+        FROM conjoint
+        WHERE id_conjoint = ?
+      ) AS result
+      LIMIT 1;
+    `;
+
+    // Exécuter la requête
+    const [results] = await db.query(query, [id, id]);
+
+    if (results.length > 0) {
+      // Retourner l'id_travailleur
+      res.json({ id_travailleur: results[0].id_travailleur });
+    } else {
+      // Aucun résultat trouvé
+      res.status(404).json({ message: "Aucun travailleur associé trouvé" });
+    }
+  } catch (error) {
+    console.error("Erreur lors de la récupération de l'id_travailleur :", error);
+    res.status(500).json({ message: "Erreur serveur" });
+  }
+});
+
 
   
 

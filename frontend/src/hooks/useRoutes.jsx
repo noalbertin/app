@@ -47,10 +47,10 @@ export const useRoutes = () => {
       ...(role === "ADMINISTRATEUR" ? [
         
         {
-          title: "Excel",
+          title: "Bénéficiaire",
           icon: PiMicrosoftExcelLogoBold,
-          path: "/excel",
-          active: location === "/excel",
+          path: "/beneficiaire",
+          active: location === "/beneficiaire",
           showInSidebar: true,
         },
         {

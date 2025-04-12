@@ -56,7 +56,7 @@ const Users = () => {
   useEffect(() => {
     setTimeout(async () => {
     fetchData();
-     }, 1000);
+     }, 500);
   }, []);
 
   const handleSearch = () => {
@@ -66,7 +66,6 @@ const Users = () => {
         // Convertir cin_travailleur en chaîne de caractères pour éviter l'erreur
         const cinTravailleur = user.cin_travailleur ? user.cin_travailleur.toString().toLowerCase() : '';
         const nomTravailleur = user.nom_travailleur ? user.nom_travailleur.toLowerCase() : '';
-        const prenomTravailleur = user.prenom_travailleur ? user.prenom_travailleur.toLowerCase() : '';
         const codeMenage = user.codeMenage ? user.codeMenage.toString().toLowerCase() : '';
         const role = user.role ? user.role.toLowerCase() : '';
   
@@ -77,7 +76,6 @@ const Users = () => {
   
         return (
           nomTravailleur.includes(query) ||
-          prenomTravailleur.includes(query) ||
           cinTravailleur.includes(query) || // Recherche dans le cin_travailleur converti en chaîne
           codeMenage.includes(query) ||
           role.includes(query) ||
@@ -152,7 +150,6 @@ const Users = () => {
   const [values, setValues] = useState({
     codeMenage: "",
     nom_travailleur: "",
-    prenom_travailleur: "",
     sexe_travailleur: "",
     age_travailleur: "",
     cin_travailleur: "",
@@ -173,7 +170,6 @@ const Users = () => {
         id_travailleur: travailleurData.id_travailleur,
         codeMenage: travailleurData.codeMenage,
         nom_travailleur: travailleurData.nom_travailleur,
-        prenom_travailleur: travailleurData.prenom_travailleur,
         sexe_travailleur: travailleurData.sexe_travailleur,
         cin_travailleur: travailleurData.cin_travailleur,
         role: travailleurData.role,
@@ -203,7 +199,6 @@ const Users = () => {
         setValues({
           codeMenage: "",
           nom_travailleur: "",
-          prenom_travailleur: "",
           sexe_travailleur: "",
           cin_travailleur: "",
           role: "",
@@ -221,10 +216,10 @@ const Users = () => {
     }
   };
 
-  const handleDelete = (id_travailleur, nom_travailleur, prenom_travailleur) => {
+  const handleDelete = (id_travailleur, nom_travailleur) => {
     // Afficher une alerte de suppression avec SweetAlert2
     Swal.fire({
-      title: `Êtes-vous sûr de vouloir supprimer ${nom_travailleur } ${prenom_travailleur }  ?`,
+      title: `Êtes-vous sûr de vouloir supprimer ${nom_travailleur }  ?`,
       text: "Vous ne pourrez pas revenir en arrière!",
       icon: "warning",
       showCancelButton: true,
@@ -284,7 +279,6 @@ const Users = () => {
       setValues({
         codeMenage: "",
         nom_travailleur: "",
-        prenom_travailleur: "",
         sexe_travailleur: "",
         cin_travailleur: "",
         role: "",
@@ -428,7 +422,7 @@ const Users = () => {
                       alt={user.nom_travailleur}
                       className="w-10 h-10 rounded-full mr-2 object-cover"
                     />
-                    {user.nom_travailleur} {user.prenom_travailleur}
+                    {user.nom_travailleur}
                   </div>
                   <span className="w-1/5">{user.codeMenage}</span>
                   <span className="w-1/5 flex items-center">
@@ -461,7 +455,7 @@ const Users = () => {
                       <a
                         href="#"
                         style={{ color: "#e95959" }}
-                        onClick={() => handleDelete(user.id_travailleur, user.nom_travailleur, user.prenom_travailleur)}
+                        onClick={() => handleDelete(user.id_travailleur, user.nom_travailleur)}
                       >
                         <FaTrashAlt />
                       </a>
@@ -477,6 +471,7 @@ const Users = () => {
                     <p><strong>CIN:</strong> {user.cin_travailleur}</p>
                     <p><strong>Âge:</strong> {calculateAge(user.age_travailleur)} ans</p>
                     <p><strong>Rôle:</strong> {user.role}</p>
+                    <p><strong>Emai:</strong> {user.email_travailleur}</p>
                   </div>
                 )}
               </React.Fragment>
@@ -504,7 +499,7 @@ const Users = () => {
             >
               <div className="flex justify-between mb-2">
                 <div>
-                  <strong>Nom:</strong> {user.nom_travailleur} {user.prenom_travailleur}
+                  <strong>Nom:</strong> {user.nom_travailleur}
                 </div>
                 <div className="ml-2 ">
                   <img
@@ -540,7 +535,7 @@ const Users = () => {
                   <GrEdit />
                 </a>
 
-                <a href="#" style={{ color: "#e95959" }} onClick={() => handleDelete(user.id_travailleur, user.nom_travailleur, user.prenom_travailleur)}>
+                <a href="#" style={{ color: "#e95959" }} onClick={() => handleDelete(user.id_travailleur, user.nom_travailleur)}>
                   <FaTrashAlt />
                 </a>
                 <Link to={`/profile/${user.id_travailleur}`} className="text-green-500">
@@ -603,22 +598,15 @@ const Users = () => {
             <form onSubmit={(e) => handleModification(e, values.id_travailleur)}>
               {/* Corps du modal */}
               <div className="p-4">
-              <div className="mb-5">
+                
+                <div className="grid gap-4 mb-4 grid-cols-2">
+                  <div className="">
                     <label htmlFor="Identifiant" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Identifiant</label>
                     <input type="text" value={values.id_travailleur}
                       readOnly
                     className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500" required />
                   </div>
                 
-                <div className="grid gap-4 mb-4 grid-cols-2">
-                <div className="">
-                    <label htmlFor="price" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Nom Travailleur</label>
-                    <input type="text" value={values.prenom_travailleur} 
-                      onChange={(e) =>
-                      setValues({ ...values, prenom_travailleur: e.target.value })
-                      }  className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500" placeholder="" required />
-                  </div>
-                  
                   <div className="">
                     <label htmlFor="price" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Nom Travailleur</label>
                     <input type="text" value={values.nom_travailleur} 

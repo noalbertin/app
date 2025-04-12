@@ -1,19 +1,19 @@
 import * as XLSX from 'xlsx';
+import ExcelJS from "exceljs";
 import React, { useState, useEffect, useRef, useContext } from 'react';
 import Swal from 'sweetalert2';
 import { FaPrint, FaFileCsv } from "react-icons/fa6";
-import { FaPlus, FaMinus } from "react-icons/fa";
-import ReactToPrint from 'react-to-print';
+import { FaPlus, FaMinus, FaTrashAlt } from "react-icons/fa";
 import { PiMicrosoftExcelLogoBold } from "react-icons/pi";
 import BackToTop from "../components/BackToTop";
 import { saveAs } from "file-saver";
 import Skeleton from 'react-loading-skeleton';
 import 'react-loading-skeleton/dist/skeleton.css';
 import { ThemeContext } from "../context/ThemeContext"; 
-
-
 import axios from 'axios';
-
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
+ 
 const Excel = () => {
     const [file, setFile] = useState(null);
     const [uploading, setUploading] = useState(false);
@@ -26,7 +26,6 @@ const Excel = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(10);
-    const tableRef = useRef();
     const [allExpanded, setAllExpanded] = useState(false);
     const indexOfLastItem = currentPage * itemsPerPage;
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
@@ -41,6 +40,94 @@ const Excel = () => {
   // Définir les couleurs en fonction du mode sombre
   const baseColor = isDarkMode ? '#2c3e50' : '#E0E0E0'; // Couleur de fond du skeleton
   const highlightColor = isDarkMode ? '#555' : '#F0F0F0';
+
+
+  // Fonction pour générer le PDF
+  const generatePDF = () => {
+    if (isLoading) {
+      alert('Les données sont en cours de chargement. Veuillez patienter.');
+      return;
+    }
+  
+    // Créer un tableau HTML dynamiquement
+    const table = document.createElement('table');
+    table.style.width = '100%';
+    table.setAttribute('border', '1');
+    table.style.fontSize = '14px'; // Taille de police par défaut pour le tableau
+  
+    // Créer l'en-tête du tableau
+    const thead = document.createElement('thead');
+    const headerRow = document.createElement('tr');
+    const headers = [
+      'Num Ménage', 'Nom Travailleur', 'Remplaçant', 'Mère', 'Sexe',
+      'Récepteur Transfert', 'CIN Récepteur', 'Chef de Ménage','District', 'Commune', 'Fokontany', 'Groupe de Critère'
+    ];
+  
+    headers.forEach(headerText => {
+      const th = document.createElement('th');
+      th.textContent = headerText;
+      th.style.padding = '12px'; // Augmenter le padding pour plus d'espace
+      th.style.backgroundColor = '#f2f2f2';
+      th.style.fontSize = '16px'; // Taille de police plus grande pour l'en-tête
+      headerRow.appendChild(th);
+    });
+    thead.appendChild(headerRow);
+    table.appendChild(thead);
+  
+    // Créer le corps du tableau avec les données
+    const tbody = document.createElement('tbody');
+    ménages.forEach(ménage => {
+      const row = document.createElement('tr');
+      const columns = [
+        ménage.num_ménage,
+        ménage.nom_travailleur,
+        ménage.remplaçant,
+        ménage.mère,
+        ménage.sexe,
+        ménage.récepteur_transfert,
+        ménage.cin_récepteur,
+        ménage.nom_chef_ménage,
+        ménage.district,
+        ménage.commune,
+        ménage.fokontany,
+        ménage.groupe_critere,
+      ];
+  
+      columns.forEach(columnText => {
+        const td = document.createElement('td');
+        td.textContent = columnText;
+        td.style.padding = '12px'; // Augmenter le padding pour plus d'espace
+        td.style.fontSize = '14px'; // Taille de police plus grande pour les cellules
+        row.appendChild(td);
+      });
+      tbody.appendChild(row);
+    });
+    table.appendChild(tbody);
+  
+    // Ajouter le tableau à un conteneur temporaire
+    const pdfContainer = document.createElement('div');
+    pdfContainer.style.position = 'absolute';
+    pdfContainer.style.left = '-9999px';
+    pdfContainer.appendChild(table);
+    document.body.appendChild(pdfContainer);
+  
+    // Convertir le tableau en PDF
+    html2canvas(pdfContainer, {
+      scale: 2, // Augmenter la résolution pour un meilleur rendu
+      useCORS: true, // Permettre le chargement des images externes
+    }).then(canvas => {
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF('l', 'mm', 'a4'); // Mode paysage (landscape)
+      const imgWidth = 297; // Largeur de la page A4 en mode paysage
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+  
+      pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+      pdf.save('Liste des bénéficiaires.pdf');
+  
+      // Nettoyer le conteneur temporaire
+      document.body.removeChild(pdfContainer);
+    });
+  };
 
   const handleFileChange = (event) => {
     const selectedFile = event.target.files[0];
@@ -77,27 +164,55 @@ const Excel = () => {
   useEffect(() => {
     setTimeout(async () => {
     fetchData();
-     }, 1000);
+     }, 500);
   }, []);
 
   const exportToExcel = () => {
-    const worksheet = XLSX.utils.json_to_sheet(ménages);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Ménages");
-
-    const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
-    const data = new Blob([excelBuffer], { type: "application/octet-stream" });
-    saveAs(data, "menages.xlsx");
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet("Ménages");
+  
+    // Données
+    const headers = Object.keys(ménages[0]);
+    const rows = ménages.map((row) => Object.values(row));
+  
+    // Définir les en-têtes avec leurs clés et largeur
+    worksheet.columns = headers.map((header) => ({
+      header: header.toUpperCase(), // En majuscule
+      key: header,
+      width: 25, // Largeur de chaque colonne
+    }));
+  
+    // Ajouter les données
+    worksheet.addRows(rows);
+  
+    // Styliser uniquement la première ligne (les en-têtes)
+    const headerRow = worksheet.getRow(1); // Récupérer la première ligne
+    headerRow.eachCell((cell) => {
+      cell.font = { bold: true, color: { argb: "FFFFFFFF" } }; // Texte blanc
+      cell.fill = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: "FF4CAF50" }, // Fond vert
+      };
+      cell.alignment = { horizontal: "center", vertical: "middle" }; // Centrer le texte
+    });
+  
+    // Générer le fichier Excel
+    workbook.xlsx.writeBuffer().then((buffer) => {
+      const blob = new Blob([buffer], { type: "application/octet-stream" });
+      saveAs(blob, "menages.xlsx");
+    });
   };
+  
 
   const exportToCSV = () => {
     // Ajoute le BOM UTF-8 pour garantir l'encodage correct des caractères spéciaux
     const bom = "\uFEFF";
 
     // Prépare les en-têtes et les lignes du CSV
-    const headers = Object.keys(ménages[0]).join(',') + '\n';
+    const headers = Object.keys(ménages[0]).join(', ') + '\n';
     const rows = ménages
-        .map(ménage => Object.values(ménage).join(','))
+        .map(ménage => Object.values(ménage).join(', '))
         .join('\n');
 
     // Combine le BOM, les en-têtes et les lignes de données
@@ -219,13 +334,60 @@ const toggleAllRowsExpansion = () => {
   setAllExpanded(!allExpanded); // Basculer l'état allExpanded
 };
 
-     // Assurez-vous d'étendre toutes les lignes avant l'impression
-  useEffect(() => {
-    if (tableRef.current) {
-      expandAllRows(); // Étend toutes les lignes avant d'imprimer
-    }
-  }, [tableRef.current]); 
 
+
+  const handleDelete = (id, nom_travailleur) => {
+    // Afficher une alerte de suppression avec SweetAlert2
+    Swal.fire({
+      title: `Êtes-vous sûr de vouloir supprimer ${nom_travailleur } ?`,
+      text: "Vous ne pourrez pas revenir en arrière!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Oui, supprimer!",
+      cancelButtonText: "Annuler",
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          // Appel à axios.delete pour supprimer la vente
+          const response = await axios.delete(`http://localhost:8081/excel/supprimerExcel/${id}`);
+          
+          // Vérifier si la suppression a réussi en fonction de la réponse de l'API
+          if (response.status === 200) {
+            // Actualiser les données après la suppression
+            await fetchData();
+  
+            // Afficher une alerte de succès
+            Swal.fire({
+              title: "Succèss 🎉",
+              text: "Suppression Réussie !",
+              icon: "success",
+              confirmButtonColor: "#3085d6",
+              confirmButtonText: "OK",
+            });
+          } else {
+            // Gérer les autres cas d'échec
+            Swal.fire({
+              title: "Erreur 😕",
+              text: "La suppression a échoué. Veuillez réessayer.",
+              icon: "error",
+              confirmButtonColor: "#d33",
+            });
+          }
+        } catch (err) {
+          // Afficher une alerte d'erreur en cas de problème avec la requête
+          Swal.fire({
+            title: "Erreur 😕",
+            text: "Un problème est survenu lors de la suppression.",
+            icon: "error",
+            confirmButtonColor: "#d33",
+          });
+          console.log(err);
+        }
+      }
+    });
+  };
 
 
   return (
@@ -235,7 +397,7 @@ const toggleAllRowsExpansion = () => {
           onClick={handleOpenModal}
           className="flex items-center text-white bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 hover:from-purple-600 hover:via-pink-600 hover:to-red-600 focus:ring-4 focus:outline-none focus:ring-pink-300 dark:focus:ring-pink-800 font-medium rounded-lg text-md px-6 py-3 transition-all duration-300 ease-in-out transform hover:scale-105 shadow-lg hover:shadow-xl"
         >
-          Ajouter un nouveau document
+          Ajouter une nouvelle liste
         </button>
       </div>
       {isOpen && (
@@ -359,33 +521,28 @@ const toggleAllRowsExpansion = () => {
                 </>
               )}
             </button>
-
-              <ReactToPrint 
-                trigger={() => (
-                  <button 
-                  
-                  className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-50">
-                    <FaPrint className="inline-block mr-2" />
-                    Imprimer
-                  </button>
-                )}
-                content={() => tableRef.current}
-              />
              <button 
                     onClick={exportToExcel} 
                     className="px-4 py-2 bg-green-600 text-white rounded-lg">
-                    <PiMicrosoftExcelLogoBold className="inline-block mr-2"/> Excel
+                    <PiMicrosoftExcelLogoBold className="inline-block mr-2"/>Excel
                 </button>
                 <button 
                   onClick={exportToCSV} 
                   className="px-4 py-2 bg-purple-600 text-white rounded-lg">
-                  <FaFileCsv className="inline-block mr-2"/> CSV
+                  <FaFileCsv className="inline-block mr-2"/>CSV
+              </button>
+              <button
+                onClick={generatePDF}
+                className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-50"
+              >
+                <FaPrint className="inline-block mr-2" />
+                PDF
               </button>
             </div>
 
             
             <div className="overflow-x-auto hidden md:block">
-              <table className="min-w-full bg-slate-50 border border-gray-200 dark:bg-gray-800 dark:border-gray-700 shadow-lg rounded-lg overflow-hidden" ref={tableRef}>
+              <table className="min-w-full bg-slate-50 border border-gray-200 dark:bg-gray-800 dark:border-gray-700 shadow-lg rounded-lg overflow-hidden" >
                 <thead className="bg-gray-100 dark:bg-gray-700">
                   <tr>
                     <th className="py-3 px-4 border-b dark:border-gray-600 font-semibold text-gray-700 dark:text-gray-300">Num Ménage</th>
@@ -454,6 +611,12 @@ const toggleAllRowsExpansion = () => {
                                   <p><strong>Commune:</strong> {ménage.commune}</p>
                                   <p><strong>Fokontany:</strong> {ménage.fokontany}</p>
                                   <p><strong>Groupe de Critère:</strong> {ménage.groupe_critere}</p>
+                                  
+                                </div>
+                                <div className="flex justify-end">
+                                  <a href="#" style={{ color: "#e95959" }} onClick={() => handleDelete(ménage.id, ménage.nom_travailleur)}>
+                                    <FaTrashAlt />
+                                  </a>                   
                                 </div>
                               </td>
                             </tr>
@@ -491,8 +654,14 @@ const toggleAllRowsExpansion = () => {
                   <p><strong>Commune:</strong> {ménage.commune}</p>
                   <p><strong>Fokontany:</strong> {ménage.fokontany}</p>
                   <p><strong>Groupe de Critère:</strong> {ménage.groupe_critere}</p>
+                  <div className="flex justify-end">
+                    <a href="#" style={{ color: "#e95959" }} onClick={() => handleDelete(ménage.id, ménage.nom_travailleur)}>
+                      <FaTrashAlt />
+                    </a>                   
+                  </div>
                   
                 </div>
+
               ))
             ):(
               <tr>

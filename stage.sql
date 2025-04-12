@@ -23,7 +23,7 @@ CREATE TABLE `conjoint` (
 
 --
 -- Structure de la table `enfants`
---
+
 
 CREATE TABLE `enfants` (
   `id_enfant` char(36) NOT NULL DEFAULT uuid(),

@@ -7,6 +7,7 @@ import { useLocation } from 'react-router-dom'; // Importer useLocation
 import Histogram from '../components/Histogram';
 import SkeletonSection from '../skeleton/SectionSkeleton';
 import SkeletonLoader from '../skeleton/SkeletonLoader';
+import { FaCamera } from "react-icons/fa";
 
 const Accueil = () => {
   const [travailleur, setTravailleur] = useState(null);
@@ -20,7 +21,7 @@ const Accueil = () => {
         setTimeout(async () => {
           const response = await axios.get(`http://localhost:8081/travailleur/propos/${id_travailleur}`);
           setTravailleur(response.data);
-        }, 1000);
+        }, 500);
       } catch (error) {
         console.error('Erreur lors de la récupération du travailleur', error);
       }
@@ -165,6 +166,15 @@ const Accueil = () => {
           </div>
         </div>
       </div>
+
+      {/* <div className="flex flex-col items-center">
+       
+        <button
+          className="w-24 h-24 rounded-full border-2 border-gray-300 flex items-center justify-center hover:bg-gray-100"
+        >
+          <FaCamera className='size-10'/>
+        </button>
+      </div> */}
     </div>
   );
 };

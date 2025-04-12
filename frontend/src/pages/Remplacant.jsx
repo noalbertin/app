@@ -67,46 +67,48 @@ const Remplacant = () => {
         <div className="flex justify-center">
           <h1 className="uppercase text-4xl leading-normal font-bold">Choisissez votre Remplaçant</h1>
         </div>
-        <div className="row clearfix flex justify-center group">
-          {/* Afficher le conjoint */}
-          {remplacants.conjoint && (
-            <div 
-              className="col-lg-3 col-md-6 col-sm-12 "
-              onClick={() => definirRemplacant(remplacants.conjoint.id)}  // Appel à la fonction
-            >
-              <div className="card card-box cursor-pointer m-2 group-hover:blur-sm hover:!blur-none group-hover:scale-[0.85] hover:!scale-100 duration-100">
-                <img className="card-img-top" 
-                  src={`http://localhost:8081/${remplacants.conjoint.imageUrl.replace('backend/', '')}`} 
-                  alt="Conjoint" 
-                />
-                <div className="card-body">
-                  <h5 className="card-title weight-500">{remplacants.conjoint.nom} </h5>
-                  <p className="card-text text-black">Votre Conjoint, né(e) le {formatDate(remplacants.conjoint.age)}</p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Afficher les enfants */}
-          {remplacants.enfants && remplacants.enfants.map((enfant) => (
-            <div 
-              className="col-lg-3 col-md-6 col-sm-12 cursor-pointer m-2" 
-              key={enfant.id}
-              onClick={() => definirRemplacant(enfant.id)}  // Appel à la fonction
-            >
-              <div className="card card-box cursor-pointer m-2 group-hover:blur-sm hover:!blur-none group-hover:scale-[0.85] hover:!scale-100 duration-100">
-                <img className="card-img-top" 
-                  alt="Enfant"
-                  src={`http://localhost:8081/${enfant.imageUrl.replace('backend/', '')}`} 
-                />
-                <div className="card-body">
-                  <h5 className="card-title weight-500">{enfant.nom}</h5>
-                  <p className="card-text text-black">Enfant, né(e) le {formatDate(enfant.age)}</p>
-                </div>
-              </div>
-            </div>
-          ))}
+        <div className="flex flex-row justify-center group space-x-4">
+  {/* Afficher le conjoint */}
+  {remplacants.conjoint && (
+    <div 
+      className="col-lg-3 col-md-6 col-sm-12 transform transition-all duration-300 hover:scale-105"
+      onClick={() => definirRemplacant(remplacants.conjoint.id)}  // Appel à la fonction
+    >
+      <div className="card card-box cursor-pointer m-2 group-hover:blur-sm hover:!blur-none group-hover:scale-[0.85] hover:!scale-100 duration-100 bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300">
+        <img 
+          className="card-img-top w-full h-48 object-cover"
+          src={`http://localhost:8081/${remplacants.conjoint.imageUrl.replace('backend/', '')}`} 
+          alt="Conjoint" 
+        />
+        <div className="card-body p-4">
+          <h5 className="card-title weight-500 text-xl font-semibold mb-2">{remplacants.conjoint.nom}</h5>
+          <p className="card-text text-gray-700">Votre Conjoint, né(e) le {formatDate(remplacants.conjoint.age)}</p>
         </div>
+      </div>
+    </div>
+  )}
+
+  {/* Afficher les enfants */}
+  {remplacants.enfants && remplacants.enfants.map((enfant) => (
+    <div 
+      className="col-lg-3 col-md-6 col-sm-12 transform transition-all duration-300 hover:scale-105"
+      key={enfant.id}
+      onClick={() => definirRemplacant(enfant.id)}  // Appel à la fonction
+    >
+      <div className="card card-box cursor-pointer m-2 group-hover:blur-sm hover:!blur-none group-hover:scale-[0.85] hover:!scale-100 duration-100 bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300">
+        <img 
+          className="card-img-top w-full h-48 object-cover"
+          alt="Enfant"
+          src={`http://localhost:8081/${enfant.imageUrl.replace('backend/', '')}`} 
+        />
+        <div className="card-body p-4">
+          <h5 className="card-title weight-500 text-xl font-semibold mb-2">{enfant.nom}</h5>
+          <p className="card-text text-gray-700">Enfant, né(e) le {formatDate(enfant.age)}</p>
+        </div>
+      </div>
+    </div>
+  ))}
+</div>
       </form>
     </div>
   );

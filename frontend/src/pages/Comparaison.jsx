@@ -8,13 +8,16 @@ import { SiMicrosoftexcel } from "react-icons/si";
 import BackToTop from '../components/BackToTop';
 import Comparaison_excel from './Comparaison_excel';
 import SkeletonLoader from '../skeleton/SkeletonLoader';
+import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
+import { useNavigate } from "react-router-dom"; // Importez useNavigate
 
 
 const Comparaison = () => {
   const [namesData, setNamesData] = useState([]);
   const [detailsData, setDetailsData] = useState({ travailleurs: [], conjoints: [], enfants: [] });
   const [selectedName, setSelectedName] = useState(null); // État pour le nom sélectionné
-  const comparaisonRef = useRef();
+  const comparaisonRef = useRef(null);
   const { theme } = useContext(ThemeContext);
   const isDarkMode = theme === "dark";
   const [activeTab, setActiveTab] = useState("travailleur");
@@ -22,6 +25,25 @@ const Comparaison = () => {
   const [showAll, setShowAll] = useState(false); // Gérer l'affichage limité ou complet
   const [searchTerm, setSearchTerm] = useState(''); // Gérer le terme de recherche
   const [isLoadingDetails, setIsLoadingDetails] = useState(false);
+  const [selectedId, setSelectedId] = useState(null);
+  const navigate = useNavigate();
+
+
+
+  const [selectedTravailleurId, setSelectedTravailleurId] = useState(null);
+  // Fonction pour gérer le clic sur un élément
+  const handleItemClick = async (id) => {
+    try {
+      // Appeler la route backend pour récupérer l'id_travailleur
+      const response = await axios.get(`http://localhost:8081/comparaison/get-travailleur/${id}`);
+      const { id_travailleur } = response.data;
+
+      // Rediriger vers la page de profil avec l'id_travailleur
+      navigate(`/profile/${id_travailleur}`);
+    } catch (error) {
+      console.error("Erreur lors de la récupération de l'id_travailleur :", error);
+    }
+  };
 
 
   // Utiliser useEffect pour récupérer les noms avec les ids au chargement
@@ -44,7 +66,7 @@ const Comparaison = () => {
   useEffect(() => {
     setTimeout(async () => {
       fetchNamesData();
-     }, 1000);
+     }, 500);
   }, []);
 
   // Fonction pour afficher les détails des ids
@@ -87,6 +109,26 @@ const Comparaison = () => {
     setActiveTab(tab);
   };
 
+  const generatePDF = () => {
+    const input = comparaisonRef.current;
+
+    html2canvas(input, {
+      scale: 2, // Augmenter la résolution pour un meilleur rendu
+      useCORS: true, // Permettre le chargement des images externes
+      backgroundColor: isDarkMode ? "#1E293B" : "#FFFFFF", // Adapter la couleur de fond au mode sombre
+    }).then((canvas) => {
+      const imgData = canvas.toDataURL("image/png");
+      const pdf = new jsPDF("p", "mm", "a4"); // Mode portrait (p) ou paysage (l)
+      const imgWidth = 210; // Largeur de la page A4 en mm
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+      pdf.addImage(imgData, "PNG", 0, 0, imgWidth, imgHeight);
+
+     
+
+      pdf.save("Identification doublon.pdf");
+    });
+  }
 
   return (
     <>
@@ -157,14 +199,11 @@ const Comparaison = () => {
               {/* Bouton pour Voir plus */}
               <div className="flex justify-end items-center mb-4 gap-1">
                 {/* Bouton pour imprimer */}
-                <ReactToPrint
-                  trigger={() => (
-                    <button className="flex items-center gap-2 px-4 py-2 bg-gray-500 text-slate-50 rounded-lg shadow-md hover:bg-gray-600 transition-colors duration-300">
-                      <FaPrint/> Imprimer
-                    </button>
-                  )}
-                  content={() => comparaisonRef.current}
-                />
+                
+                  <button onClick={generatePDF} className="flex items-center gap-2 px-4 py-2 bg-gray-500 text-slate-50 rounded-lg shadow-md hover:bg-gray-600 transition-colors duration-300">
+                     <FaPrint/> Imprimer
+                  </button>
+                
 
                 {/* Bouton pour voir plus/moins */}
                 {filteredNames.length > 4 && (
@@ -249,7 +288,8 @@ const Comparaison = () => {
                       return detail ? (
                         <figure
                           key={id}
-                          className={`flex flex-col items-center justify-center p-8 text-center rounded-lg shadow-md ${isDarkMode ? "bg-slate-900 text-slate-50" : "bg-gray-50 text-slate-800"} transition-transform duration-300 hover:scale-105 cursor-pointer`}
+                          onClick={() => handleItemClick(detail.id)}
+                          className={`flex flex-col items-center justify-center p-8 text-center rounded-lg shadow-md  ${isDarkMode ? "bg-slate-900 text-slate-50 hover:bg-slate-600" : "bg-gray-50 text-slate-800 hover:bg-gray-200"} transition-transform duration-300 hover:scale-105 cursor-pointer`}
                         >
                           <div className="flex items-center justify-center mb-4">
                             <img
@@ -260,8 +300,8 @@ const Comparaison = () => {
                             <div className="ml-4 space-y-0.5 text-left rtl:text-right dark:text-slate-50">
                               <div className="text-lg font-semibold">{detail.nom} {detail.prenom}</div>
                               <div className="text-sm text-gray-500 dark:text-gray-400">
-                                {detail.role === 'enfant' ? `Enfant de ${detail.nom_travailleur} ${detail.prenom_travailleur} ` 
-                                  : detail.role === 'conjoint'? `Conjoint de ${detail.nom_travailleur} ${detail.prenom_travailleur} `
+                                {detail.role === 'enfant' ? `Enfant de ${detail.nom_travailleur}` 
+                                  : detail.role === 'conjoint'? `Conjoint de ${detail.nom_travailleur} `
                                 : detail.role  }
                               </div>
                             </div>

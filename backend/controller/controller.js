@@ -6,9 +6,6 @@ import jwt from 'jsonwebtoken';
 import nodemailer from 'nodemailer';
 import mysql from 'mysql2/promise'; 
 
-const router = express.Router();
-
-
 // Configuration de la connexion à la base de données
 const db = await mysql.createConnection({
     host: 'localhost',
@@ -16,6 +13,8 @@ const db = await mysql.createConnection({
     password: '',
     database: 'stage'
   });
+
+const router = express.Router();
   
 
 // Configuration de Nodemailer
@@ -252,6 +251,53 @@ router.post('/forgot-password', async (req, res) => {
       res.status(500).json({ message: 'Lien invalide ou expiré.' });
     }
   });
+
+  router.post('/checkCode', async (req, res) => {
+    const { codeMenage } = req.body;
+
+    if (!codeMenage) {
+        return res.status(400).json({ message: "Le code ménage est requis." });
+    }
+
+    try {
+        const query = 'SELECT * FROM excel WHERE num_ménage = ?';
+        db.query(query, [codeMenage], (err, result) => {
+            if (err) {
+                console.error(err);
+                return res.status(500).json({ message: "Erreur serveur lors de la validation." });
+            }
+
+            if (result.length > 0) {
+                res.status(200).json({ message: "Code ménage valide." });
+            } else {
+                res.status(400).json({ message: "Code ménage introuvable. Veuillez contacter le responsable." });
+            }
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Erreur serveur." });
+    }
+});
+
+router.get('/nomTravailleur', async (req, res) => {
+  const { codeMenage } = req.query;
+
+  try {
+      const [rows] = await db.query(
+          'SELECT nom_travailleur FROM excel WHERE num_ménage = ?',
+          [codeMenage]
+      );
+
+      if (rows.length === 0) {
+          return res.status(404).json({ message: 'Aucun travailleur trouvé pour ce numéro de ménage.' });
+      }
+
+      res.status(200).json({ nom_travailleur: rows[0].nom_travailleur });
+  } catch (error) {
+      console.error('Erreur lors de la récupération:', error);
+      res.status(500).json({ message: 'Erreur serveur.' });
+  }
+});
   
 
 

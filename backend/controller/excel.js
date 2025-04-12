@@ -205,6 +205,37 @@ router.get('/noms-communs', (req, res) => {
   });
 });
 
+router.delete('/supprimerExcel/:id', async (req, res) => {
+  try {
+      const id = req.params.id;
+
+      // Verify if `id` is valid
+      if (!id) {
+          return res.status(400).json({ Message: 'Invalid ID provided' });
+      }
+
+      const sql = 'DELETE FROM excel WHERE id = ?';
+
+      db.query(sql, [id], (err, results) => {
+        if (err) {
+          console.error('Erreur lors de la suppression des données :', err);
+          return res.status(500).json({ message: 'Erreur lors de la suppression des données' });
+        }
+
+        if (results.affectedRows === 0) {
+          return res.status(404).json({ Message: 'Excel non trouvé' });
+        }
+
+        res.status(200).json({ Message: 'Suppression Excel réussie' });
+      });
+  } catch (err) {
+      console.error('Error deleting Excel entry:', err); // Log the error
+      return res.status(500).json({ Message: `Oups! DELETE Excel non réussi: ${err.message}` });
+  }
+});
+
+
+
 
 
 

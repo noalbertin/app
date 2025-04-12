@@ -7,17 +7,15 @@ import dotenv from 'dotenv';
 dotenv.config();
 import bcrypt from 'bcrypt';
 import nodemailer from 'nodemailer';
-
 const router = express.Router();
-
-// Configuration de la connexion MySQL
-const db = mysql.createPool({
+// Configuration de la connexion à la base de données
+const db = await mysql.createConnection({
     host: 'localhost',
     user: 'root',
     password: '',
     database: 'stage'
-});
-
+  });
+  
 // Configuration de Nodemailer
 const transporter = nodemailer.createTransport({
     service: 'gmail',
@@ -26,7 +24,6 @@ const transporter = nodemailer.createTransport({
         pass: process.env.EMAIL_PASS
     }
 });
-
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
       cb(null, 'backend/uploads/travailleur');
@@ -36,25 +33,21 @@ const storage = multer.diskStorage({
     },
 });
 const upload = multer({ storage });
+// Route pour récupérer tous les travailleurs
+router.get('/', async (req, res) => {
+    try {
+        const [result] = await db.query('SELECT * FROM travailleur');
+        res.json(result);
+    } catch (err) {
+        res.status(500).json({ Message: 'Oups! SELECT utilisateur non réussi: ' + err });
+    }
+});
+
+
 
 // Route pour ajouter un travailleur
 router.post('/addTravailleur', upload.single('imageUrl_travailleur'), async (req, res) => {
     try {
-        console.log(req.body);  // Display body data for debugging
-        console.log(req.file);  // Display file data for debugging
-
-        // Verify if email already exists
-        const [emailRows] = await db.query('SELECT * FROM travailleur WHERE email_travailleur = ?', [req.body.email]);
-        if (emailRows.length > 0) {
-            return res.status(400).json({ message: 'Cet e-mail est déjà utilisé' });
-        }
-
-        // Verify if the household code (codeMenage) already exists
-        const [codeMenageRows] = await db.query('SELECT * FROM travailleur WHERE codeMenage = ?', [req.body.codeMenage]);
-        if (codeMenageRows.length > 0) {
-            return res.status(400).json({ message: 'Ce code de ménage est déjà utilisé' });
-        }
-
         // Hash password before storing it
         const hashedPassword = await bcrypt.hash(req.body.password, 10);
 
@@ -66,8 +59,8 @@ router.post('/addTravailleur', upload.single('imageUrl_travailleur'), async (req
 
         // Insert new worker (travailleur) into the database
         const insertQuery = `INSERT INTO travailleur 
-            (email_travailleur, password_travailleur, is_verified, verification_code, nom_travailleur, codeMenage, imageUrl_travailleur, sexe_travailleur, age_travailleur, cin_travailleur, prenom_travailleur) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?)`;
+            (email_travailleur, password_travailleur, is_verified, verification_code, nom_travailleur, codeMenage, imageUrl_travailleur, sexe_travailleur, age_travailleur, cin_travailleur) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
         const values = [
             req.body.email,
@@ -79,8 +72,7 @@ router.post('/addTravailleur', upload.single('imageUrl_travailleur'), async (req
             imageUrl_travailleur,
             req.body.selectedRole, 
             req.body.age_travailleur,
-            req.body.cin_travailleur,
-            req.body.prenom_travailleur
+            req.body.cin_travailleur
         ];
 
         await db.query(insertQuery, values);
@@ -122,26 +114,31 @@ router.post('/addTravailleur', upload.single('imageUrl_travailleur'), async (req
 // Dans votre code serveur (par exemple, avec Express)
 
 router.post('/validate', async (req, res) => {
-    const { email, codeMenage} = req.body;
+    const { email, codeMenage } = req.body;
     
     try {
-        // Vérification si l'email existe déjà
+        // Vérification si le code ménage existe dans la table 'excel'
+        const [codeMenageRows] = await db.query('SELECT * FROM excel WHERE num_ménage = ?', [codeMenage]);
+        if (codeMenageRows.length === 0) {
+            return res.status(400).json({ message: 'Code ménage introuvable. Veuillez contacter le responsable.' });
+        }
+
+        // Vérification si l'email est déjà utilisé
         const [emailRows] = await db.query('SELECT * FROM travailleur WHERE email_travailleur = ?', [email]);
         if (emailRows.length > 0) {
-            return res.status(400).json({ message: 'Cet e-mail est déjà utilisé' });
+            return res.status(400).json({ message: 'Cet e-mail est déjà utilisé.' });
         }
 
-        // Vérification si le code ménage existe déjà
-        const [codeMenageRows] = await db.query('SELECT * FROM travailleur WHERE codeMenage = ?', [codeMenage]);
-        if (codeMenageRows.length > 0) {
-            return res.status(400).json({ message: 'Ce code de ménage est déjà utilisé' });
+        // Vérification si le code ménage est déjà utilisé
+        const [usedCodeMenageRows] = await db.query('SELECT * FROM travailleur WHERE codeMenage = ?', [codeMenage]);
+        if (usedCodeMenageRows.length > 0) {
+            return res.status(400).json({ message: 'Vous avez déjà un compte.' });
         }
 
-         
-        // Si aucune des vérifications ne trouve de doublons, continuez avec le processus d'inscription
+        // Si tout est valide
         res.status(200).json({ message: 'Validation réussie. Vous pouvez continuer.' });
     } catch (error) {
-        console.error("Erreur serveur: ", error);
+        console.error('Erreur serveur: ', error);
         res.status(500).json({ message: 'Erreur serveur lors de la validation.' });
     }
 });
@@ -203,15 +200,7 @@ router.get('/role/:id_travailleur', async (req, res) => {
 });
 
 
-// Route pour récupérer tous les travailleurs
-router.get('/', async (req, res) => {
-    try {
-        const [result] = await db.query('SELECT * FROM travailleur');
-        res.json(result);
-    } catch (err) {
-        res.status(500).json({ Message: 'Oups! SELECT utilisateur non réussi: ' + err });
-    }
-});
+
 
 // Route pour récupérer à propos  nom travailleur
 router.get('/selectionner_travailleur', (req, res) => {
@@ -277,7 +266,6 @@ router.get('/profil/:id_travailleur', async (req, res) => {
         t.id_travailleur,
         t.codeMenage,
         t.nom_travailleur,
-        t.prenom_travailleur,
         t.sexe_travailleur,
         t.age_travailleur,
         t.cin_travailleur,
@@ -338,7 +326,6 @@ router.get('/profil/:id_travailleur', async (req, res) => {
             id_travailleur: result[0].id_travailleur,
             codeMenage: result[0].codeMenage,
             nom_travailleur: result[0].nom_travailleur,
-            prenom_travailleur: result[0].prenom_travailleur,
             sexe_travailleur: result[0].sexe_travailleur,
             age_travailleur: result[0].age_travailleur,
             cin_travailleur: result[0].cin_travailleur,
@@ -399,7 +386,6 @@ router.get('/famille/:id_travailleur', async (req, res) => {
         t.id_travailleur,
         t.codeMenage,
         t.nom_travailleur,
-        t.prenom_travailleur,
         t.sexe_travailleur,
         t.age_travailleur,
         t.cin_travailleur,
@@ -437,7 +423,6 @@ router.get('/famille/:id_travailleur', async (req, res) => {
         const travailleur = {
             id: rows[0].id_travailleur,
             nom: rows[0].nom_travailleur,
-            prenom: rows[0].prenom_travailleur,
             codeMenage: rows[0].codeMenage,
             sexe: rows[0].sexe_travailleur,
             age: rows[0].age_travailleur,
@@ -566,7 +551,6 @@ router.get('/propos/:id_travailleur', async (req, res) => {
             SELECT 
               t.id_travailleur,
               t.nom_travailleur,
-              t.prenom_travailleur,
               t.codeMenage,
               COUNT(DISTINCT t.id_travailleur) AS travailleur_count,
               COUNT(DISTINCT c.id_conjoint) AS conjoint_count,
@@ -594,7 +578,6 @@ router.get('/propos/:id_travailleur', async (req, res) => {
         res.status(200).json({
             travailleur_id: travailleur.id_travailleur,
             nom_travailleur: travailleur.nom_travailleur,
-            prenom_travailleur: travailleur.prenom_travailleur,
             codeMenage: travailleur.codeMenage,
             conjoint_count: travailleur.conjoint_count,
             enfants_count: travailleur.enfants_count,
@@ -606,4 +589,7 @@ router.get('/propos/:id_travailleur', async (req, res) => {
         res.status(500).json({ message: 'Erreur serveur' });
     }
 });
+
+
 export default router;
+
