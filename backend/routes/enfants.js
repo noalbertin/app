@@ -49,6 +49,7 @@ const checkUniqueCIN = (cin) => {
   });
 };
 
+
 router.post('/add', upload.single('image_enfant'), async (req, res) => {
   const { nom_enfant, prenom_enfant, sexe_enfant, age_enfant, cin_enfant, id_travailleur } = req.body;
   console.log(req.body);
